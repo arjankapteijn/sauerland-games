@@ -7,6 +7,9 @@ use App\Services\Signal\SignalGateway;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Log;
 
 #[Signature('game:send-thank-you')]
 #[Description('Stuur eenmalig een bedankbericht naar de hoofdgroep zodra het weekend voorbij is')]
@@ -29,12 +32,19 @@ class GameSendThankYou extends Command
             return self::SUCCESS;
         }
 
-        if ($game->signal_group_id !== null) {
-            $signal->sendMessage([$game->signal_group_id], '🏁 Het weekend zit erop — bedankt voor het meedoen allemaal, tot de volgende keer!');
-        }
-
         $game->update(['thanked_at' => now()]);
-        $this->info('Bedankbericht verstuurd.');
+
+        if ($game->signal_group_id !== null) {
+            try {
+                $signal->sendMessage([$game->signal_group_id], '🏁 Het weekend zit erop — bedankt voor het meedoen allemaal, tot de volgende keer!');
+                $this->info('Bedankbericht verstuurd.');
+            } catch (ConnectionException|RequestException $e) {
+                Log::warning('Kon bedankbericht niet versturen.', [
+                    'game_id' => $game->id,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return self::SUCCESS;
     }
