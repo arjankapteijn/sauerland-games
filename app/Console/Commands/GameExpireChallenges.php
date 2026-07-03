@@ -10,6 +10,9 @@ use App\Services\Signal\SignalGateway;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Log;
 
 #[Signature('game:expire-overdue')]
 #[Description('Mark released challenges past their deadline as expired and announce which teams missed them')]
@@ -33,7 +36,15 @@ class GameExpireChallenges extends Command
 
                 if ($missed->isNotEmpty() && $mainGroupId !== null) {
                     $names = $missed->pluck('name')->implode(', ');
-                    $signal->sendMessage([$mainGroupId], "⏰ De tijd is om voor #{$challenge->number} '{$challenge->title}'. Team(s) {$names} hebben 'm niet op tijd afgerond.");
+
+                    try {
+                        $signal->sendMessage([$mainGroupId], "⏰ De tijd is om voor #{$challenge->number} '{$challenge->title}'. Team(s) {$names} hebben 'm niet op tijd afgerond.");
+                    } catch (ConnectionException|RequestException $e) {
+                        Log::warning('Kon Signal-bericht voor verlopen opdracht niet versturen.', [
+                            'challenge_id' => $challenge->id,
+                            'exception' => $e->getMessage(),
+                        ]);
+                    }
                 }
 
                 $this->info("Opdracht #{$challenge->number} verlopen.");
