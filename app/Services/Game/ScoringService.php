@@ -70,13 +70,15 @@ class ScoringService
             return;
         }
 
-        $submission->scoreEvent?->delete();
+        DB::transaction(function () use ($submission) {
+            $submission->scoreEvent?->delete();
 
-        $submission->update([
-            'status' => SubmissionStatus::Pending,
-            'approved_by' => null,
-            'approved_at' => null,
-        ]);
+            $submission->update([
+                'status' => SubmissionStatus::Pending,
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+        });
 
         $this->announce("⚠️ De goedkeuring voor #{$submission->challenge->number} '{$submission->challenge->title}' bij Team {$submission->team->name} is ingetrokken.\n\n".$this->standingsMessage());
     }
