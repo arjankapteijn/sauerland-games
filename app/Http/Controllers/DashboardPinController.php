@@ -23,6 +23,7 @@ class DashboardPinController extends Controller
             return back()->withErrors(['pin' => 'Onjuiste pincode.']);
         }
 
+        $request->session()->regenerate();
         $request->session()->put('dashboard_authenticated', true);
 
         return redirect()->route('dashboard');
