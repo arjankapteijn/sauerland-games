@@ -81,6 +81,41 @@ Aanmelden ──▶ Random team ──▶ Teamgroep + ──▶ Opdracht ──�
 Nieuwe opdrachten toevoegen: rij in `ChallengeSeeder` + `php artisan db:seed --class=ChallengeSeeder`
 (idempotent, dubbele nummers worden overgeslagen).
 
+### Vrijgaveschema
+
+Er is **geen beheerscherm** voor opdrachten — alles staat vooraf vast in
+[`ChallengeSeeder`](database/seeders/ChallengeSeeder.php), inclusief het
+moment waarop elke opdracht automatisch vrijkomt. Elke opdracht krijgt daar
+een `release_at` als gewone lokale datum/tijd (`config/app.php` staat op
+`Europe/Amsterdam`, wat toevallig ook de tijdzone van het Sauerland is — geen
+handmatige tijdzone-conversie nodig). De scheduler (`game:release-due`, elke
+minuut) bewaakt dat veld: zodra het moment verstreken is wordt de opdracht
+vrijgegeven en naar de teamgroep(en) gestuurd. Er is bewust **geen
+`deadline_at`** — opdrachten verlopen dus niet automatisch.
+
+Huidig schema is voor het weekend Assinghausen, **vrijdag 2 t/m maandag 5
+oktober 2026**:
+
+- **Vrijdagavond** (na aankomst, vertrek was 12:00): 3 opdrachten, vanaf 18:00.
+- **Zaterdag** overdag (09:00–23:00): 9 opdrachten, plus 's avonds laat
+  Zaklamptikkertje (#8) en rond middernacht Middernachtmars (#21) — de enige
+  twee die bewust buiten de wakkere uren vallen.
+- **Zondag** overdag (09:00–23:00): de resterende 10 opdrachten, waaronder
+  de twee geheime bonusopdrachten (#22/#23) die gelijktijdig maar los naar
+  Rood en Blauw gaan.
+- **Maandag 12:00**: iedereen is onderweg naar huis — geen nieuwe opdracht
+  meer, wél stuurt `game:send-thank-you` een bedankbericht naar de
+  hoofdgroep. Die draait niet continu: de scheduler activeert 'm alleen in
+  een kort venster rond 5 oktober 11:00–12:55 (`*/5 11-12 5 10 *`), en
+  `games.thanked_at` zorgt dat het bericht maar één keer verstuurd wordt.
+
+Schuift het weekend op? Pas de datums in `ChallengeSeeder::run()`, de
+`CLOSES_AT`-constante in
+[`GameSendThankYou`](app/Console/Commands/GameSendThankYou.php) en de
+cron-expressie in [`routes/console.php`](routes/console.php) aan, en seed
+opnieuw (`php artisan migrate:fresh --seed` voor een schone lei, of zet de
+betrokken rijen handmatig terug naar `draft` met het nieuwe `release_at`).
+
 ---
 
 ## Hoe werkt het onder de motorkap
@@ -92,6 +127,7 @@ Nieuwe opdrachten toevoegen: rij in `ChallengeSeeder` + `php artisan db:seed --c
 | [`ScoringService`](app/Services/Game/ScoringService.php) | Punten toekennen/intrekken, snelheidsbonus, tussenstand-bericht |
 | `signal:listen` | Langlopend Artisan-commando dat long-polt tegen `/v1/receive` |
 | `game:release-due` / `game:expire-overdue` | Elke minuut via de scheduler: opdrachten op tijd vrijgeven/laten verlopen |
+| `game:send-thank-you` | Elke minuut via de scheduler: stuurt eenmalig een bedankbericht na afloop van het weekend |
 | Livewire-dashboard (`/dashboard`) | Live scorebord + handmatige goedkeur-fallback, PIN-gated |
 
 **De kern van de goedkeuring**: een Signal-reactie verwijst zelf al naar het
