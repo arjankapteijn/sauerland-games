@@ -26,10 +26,16 @@ class ScoringService
 
     public function approve(Submission $submission, string $organizerNumber): ScoreEvent
     {
-        $submission->loadMissing('challenge', 'team');
+        $submission->loadMissing('challenge', 'team', 'scoreEvent');
 
         if ($submission->status === SubmissionStatus::Approved) {
-            return $submission->scoreEvent()->firstOrFail();
+            return $submission->scoreEvent ?? ScoreEvent::query()->create([
+                'team_id' => $submission->team_id,
+                'challenge_id' => $submission->challenge_id,
+                'submission_id' => $submission->id,
+                'points' => $submission->challenge->points,
+                'reason' => "Opdracht #{$submission->challenge->number} '{$submission->challenge->title}' goedgekeurd",
+            ]);
         }
 
         $challenge = $submission->challenge;
