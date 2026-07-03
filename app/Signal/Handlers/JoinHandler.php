@@ -2,6 +2,7 @@
 
 namespace App\Signal\Handlers;
 
+use App\Models\Game;
 use App\Models\Participant;
 use App\Models\Team;
 use App\Services\Signal\SignalGateway;
@@ -49,9 +50,9 @@ class JoinHandler
             $this->signal->addGroupMembers($team->signal_group_id, [$participant->phone_number]);
         }
 
-        $mainGroupId = config('services.signal.main_group_id');
+        $mainGroupId = Game::current()->signal_group_id;
 
-        if (is_string($mainGroupId) && $mainGroupId !== '') {
+        if ($mainGroupId !== null) {
             $this->signal->addGroupMembers($mainGroupId, [$participant->phone_number]);
         }
 

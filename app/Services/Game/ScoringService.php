@@ -5,6 +5,7 @@ namespace App\Services\Game;
 use App\Enums\ChallengeStatus;
 use App\Enums\SubmissionStatus;
 use App\Models\Challenge;
+use App\Models\Game;
 use App\Models\ScoreEvent;
 use App\Models\Submission;
 use App\Models\Team;
@@ -103,9 +104,9 @@ class ScoringService
 
     private function announce(string $message): void
     {
-        $mainGroupId = config('services.signal.main_group_id');
+        $mainGroupId = Game::current()->signal_group_id;
 
-        if (! is_string($mainGroupId) || $mainGroupId === '') {
+        if ($mainGroupId === null) {
             return;
         }
 

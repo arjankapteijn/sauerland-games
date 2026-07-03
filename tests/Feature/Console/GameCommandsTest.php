@@ -4,6 +4,7 @@ namespace Tests\Feature\Console;
 
 use App\Enums\ChallengeStatus;
 use App\Models\Challenge;
+use App\Models\Game;
 use App\Models\Submission;
 use App\Models\Team;
 use Illuminate\Support\Facades\Http;
@@ -41,7 +42,7 @@ class GameCommandsTest extends TestCase
     public function test_game_expire_overdue_marks_challenges_expired_and_announces_missing_teams(): void
     {
         Http::fake(['*' => Http::response(['timestamp' => '1'], 201)]);
-        config(['services.signal.main_group_id' => 'main-group']);
+        Game::query()->create(['signal_group_id' => 'main-group']);
 
         $team = Team::factory()->create(['name' => 'Rood']);
         $challenge = Challenge::factory()->create([
@@ -95,7 +96,7 @@ class GameCommandsTest extends TestCase
     public function test_game_expire_overdue_does_not_announce_when_all_teams_completed_it(): void
     {
         Http::fake(['*' => Http::response(['timestamp' => '1'], 201)]);
-        config(['services.signal.main_group_id' => 'main-group']);
+        Game::query()->create(['signal_group_id' => 'main-group']);
 
         $team = Team::factory()->create();
         $challenge = Challenge::factory()->create([

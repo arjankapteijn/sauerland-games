@@ -116,7 +116,6 @@ php artisan key:generate
 |-----------|--------------|
 | `SIGNAL_API_URL` | Basis-URL van je signal-cli-rest-api-instantie |
 | `SIGNAL_BOT_NUMBER` | Het Signal-nummer dat als bot optreedt (geregistreerd via `/v1/register`) |
-| `SIGNAL_MAIN_GROUP_ID` | Group-id van de hoofdgroep — leeg totdat je `game:setup` hebt gedraaid |
 | `SIGNAL_ORGANIZERS` | Telefoonnummers van de jury, comma-separated. **Alleen** reacties van deze nummers tellen mee |
 | `SIGNAL_DASHBOARD_PIN` | Pincode voor `/dashboard` |
 
@@ -222,8 +221,8 @@ Na het opstarten éénmalig de Signal-groepen aanmaken:
 docker compose exec sauerland-games php artisan game:setup
 ```
 
-Zet de getoonde hoofdgroep-id daarna in `SIGNAL_MAIN_GROUP_ID` in de `.env`
-en herstart de app.
+De hoofdgroep-id wordt automatisch opgeslagen (in de `games`-tabel); een
+herstart of `.env`-aanpassing is daarvoor niet nodig.
 
 ### Custom-icoon in de Apps-UI
 

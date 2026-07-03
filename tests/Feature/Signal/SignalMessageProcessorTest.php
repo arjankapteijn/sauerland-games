@@ -4,6 +4,7 @@ namespace Tests\Feature\Signal;
 
 use App\Enums\SubmissionStatus;
 use App\Models\Challenge;
+use App\Models\Game;
 use App\Models\Participant;
 use App\Models\ScoreEvent;
 use App\Models\Submission;
@@ -90,7 +91,8 @@ class SignalMessageProcessorTest extends TestCase
 
     public function test_organizer_thumbs_up_approves_the_matching_submission_and_awards_points(): void
     {
-        config(['services.signal.organizers' => ['+3161999999'], 'services.signal.main_group_id' => 'main-group']);
+        config(['services.signal.organizers' => ['+3161999999']]);
+        Game::query()->create(['signal_group_id' => 'main-group']);
         Http::fake(['*' => Http::response(['timestamp' => '1'], 201)]);
 
         $team = Team::factory()->create();

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Game;
 use App\Models\Team;
 use App\Services\Signal\SignalGateway;
 use Illuminate\Console\Attributes\Description;
@@ -25,17 +26,17 @@ class GameSetup extends Command
             return self::FAILURE;
         }
 
-        $mainGroupId = config('services.signal.main_group_id');
+        $game = Game::current();
 
-        if (! is_string($mainGroupId) || $mainGroupId === '') {
+        if ($game->signal_group_id === null) {
             // Bestaat de groep al op Signal (bijv. een vorige poging kwam wel
             // aan maar de request timede lokaal uit)? Dan hergebruiken i.p.v.
             // een dubbele hoofdgroep aan te maken.
             $existing = $this->findGroupByName($signal, 'Sauerland Games');
 
             $mainGroupId = $existing ?? $signal->createGroup('Sauerland Games', $organizers, 'Aankondigingen en tussenstanden.');
+            $game->update(['signal_group_id' => $mainGroupId]);
             $this->info(($existing !== null ? 'Hoofdgroep gevonden (al aangemaakt): ' : 'Hoofdgroep aangemaakt: ').$mainGroupId);
-            $this->warn("Zet SIGNAL_MAIN_GROUP_ID={$mainGroupId} in je .env bestand.");
         } else {
             $this->info('Hoofdgroep bestaat al.');
         }

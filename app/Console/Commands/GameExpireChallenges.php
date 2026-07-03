@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ChallengeStatus;
 use App\Models\Challenge;
+use App\Models\Game;
 use App\Models\Team;
 use App\Services\Signal\SignalGateway;
 use Illuminate\Console\Attributes\Description;
@@ -28,9 +29,9 @@ class GameExpireChallenges extends Command
 
                 $challenge->update(['status' => ChallengeStatus::Expired]);
 
-                $mainGroupId = config('services.signal.main_group_id');
+                $mainGroupId = Game::current()->signal_group_id;
 
-                if ($missed->isNotEmpty() && is_string($mainGroupId) && $mainGroupId !== '') {
+                if ($missed->isNotEmpty() && $mainGroupId !== null) {
                     $names = $missed->pluck('name')->implode(', ');
                     $signal->sendMessage([$mainGroupId], "⏰ De tijd is om voor #{$challenge->number} '{$challenge->title}'. Team(s) {$names} hebben 'm niet op tijd afgerond.");
                 }
