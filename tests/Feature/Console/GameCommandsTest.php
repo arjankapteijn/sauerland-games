@@ -55,6 +55,43 @@ class GameCommandsTest extends TestCase
         Http::assertSent(fn ($request) => str_contains((string) ($request->data()['message'] ?? ''), 'Rood'));
     }
 
+    public function test_game_setup_creates_the_main_and_team_groups(): void
+    {
+        config(['services.signal.organizers' => ['+3161999999']]);
+        Http::fake([
+            '*/v1/groups/*' => Http::sequence()
+                ->push([], 200) // GET: hoofdgroep nog niet gevonden
+                ->push(['id' => 'main-group-id'], 201) // POST: hoofdgroep aanmaken
+                ->push([], 200) // GET: team Rood-groep nog niet gevonden
+                ->push(['id' => 'rood-group-id'], 201) // POST: team Rood-groep aanmaken
+                ->push([], 200) // GET: team Blauw-groep nog niet gevonden
+                ->push(['id' => 'blauw-group-id'], 201), // POST: team Blauw-groep aanmaken
+        ]);
+
+        Team::factory()->create(['name' => 'Rood']);
+        Team::factory()->create(['name' => 'Blauw']);
+
+        $this->artisan('game:setup')->assertSuccessful();
+
+        $this->assertSame(2, Team::query()->whereNotNull('signal_group_id')->count());
+    }
+
+    public function test_game_setup_reuses_an_existing_signal_group_instead_of_duplicating(): void
+    {
+        config(['services.signal.organizers' => ['+3161999999']]);
+        Http::fake([
+            '*/v1/groups/*' => Http::response([
+                ['id' => 'existing-main-id', 'name' => 'Sauerland Games'],
+            ], 200),
+        ]);
+
+        Team::factory()->create(['name' => 'Rood', 'signal_group_id' => 'already-set']);
+
+        $this->artisan('game:setup')->assertSuccessful();
+
+        Http::assertNotSent(fn ($request) => $request->method() === 'POST');
+    }
+
     public function test_game_expire_overdue_does_not_announce_when_all_teams_completed_it(): void
     {
         Http::fake(['*' => Http::response(['timestamp' => '1'], 201)]);

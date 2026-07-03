@@ -33,11 +33,24 @@ class SignalGateway
     }
 
     /**
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listGroups(): array
+    {
+        $response = $this->client()->get("/v1/groups/{$this->botNumber}")->throw();
+
+        return $response->json() ?? [];
+    }
+
+    /**
      * @param  array<int, string>  $members  Phone numbers to add, the bot number is added automatically.
      */
     public function createGroup(string $name, array $members, string $description = ''): string
     {
+        // Groepen aanmaken kan, zeker de eerste keer, langer duren dan een
+        // gewoon bericht versturen — ruimer timeout dan de client-default.
         $response = $this->client()
+            ->timeout(60)
             ->post("/v1/groups/{$this->botNumber}", [
                 'name' => $name,
                 'description' => $description,
