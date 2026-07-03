@@ -43,7 +43,9 @@ class ScoringServiceTest extends TestCase
             'status' => ChallengeStatus::Released,
             'released_at' => now()->subMinutes(10),
         ]);
-        $submission = Submission::factory()->for($challenge)->for($team)->create();
+        $submission = Submission::factory()->for($challenge)->for($team)->create([
+            'message_timestamp' => now()->subMinutes(5)->getTimestampMs(),
+        ]);
 
         $event = $this->scoring()->approve($submission, '+3161999999');
 
@@ -60,11 +62,34 @@ class ScoringServiceTest extends TestCase
             'status' => ChallengeStatus::Released,
             'released_at' => now()->subHours(2),
         ]);
-        $submission = Submission::factory()->for($challenge)->for($team)->create();
+        $submission = Submission::factory()->for($challenge)->for($team)->create([
+            'message_timestamp' => now()->subMinutes(30)->getTimestampMs(),
+        ]);
 
         $event = $this->scoring()->approve($submission, '+3161999999');
 
         $this->assertSame(10, $event->points);
+    }
+
+    public function test_bonus_is_based_on_when_the_submission_was_sent_not_when_it_is_approved(): void
+    {
+        Http::fake(['*' => Http::response(['timestamp' => '1'], 201)]);
+
+        $team = Team::factory()->create();
+        $challenge = Challenge::factory()->create([
+            'points' => 10,
+            'status' => ChallengeStatus::Released,
+            'released_at' => now()->subHours(3),
+        ]);
+        // Sent well within the window right after release, but the organizer only
+        // gets round to approving it hours later (now).
+        $submission = Submission::factory()->for($challenge)->for($team)->create([
+            'message_timestamp' => now()->subHours(3)->addMinutes(5)->getTimestampMs(),
+        ]);
+
+        $event = $this->scoring()->approve($submission, '+3161999999');
+
+        $this->assertSame(15, $event->points);
     }
 
     public function test_second_teams_approval_does_not_get_the_speed_bonus(): void
@@ -79,13 +104,45 @@ class ScoringServiceTest extends TestCase
             'released_at' => now()->subMinutes(5),
         ]);
 
-        $first = Submission::factory()->for($challenge)->for($rood)->create();
-        $second = Submission::factory()->for($challenge)->for($blauw)->create();
+        $first = Submission::factory()->for($challenge)->for($rood)->create([
+            'message_timestamp' => now()->subMinutes(4)->getTimestampMs(),
+        ]);
+        $second = Submission::factory()->for($challenge)->for($blauw)->create([
+            'message_timestamp' => now()->subMinutes(2)->getTimestampMs(),
+        ]);
 
         $this->scoring()->approve($first, '+3161999999');
         $event = $this->scoring()->approve($second, '+3161999999');
 
         $this->assertSame(10, $event->points);
+    }
+
+    public function test_the_speed_bonus_goes_to_whoever_sent_first_even_if_reviewed_out_of_order(): void
+    {
+        Http::fake(['*' => Http::response(['timestamp' => '1'], 201)]);
+
+        $rood = Team::factory()->create();
+        $blauw = Team::factory()->create();
+        $challenge = Challenge::factory()->create([
+            'points' => 10,
+            'status' => ChallengeStatus::Released,
+            'released_at' => now()->subMinutes(5),
+        ]);
+
+        $sentFirst = Submission::factory()->for($challenge)->for($rood)->create([
+            'message_timestamp' => now()->subMinutes(4)->getTimestampMs(),
+        ]);
+        $sentSecond = Submission::factory()->for($challenge)->for($blauw)->create([
+            'message_timestamp' => now()->subMinutes(2)->getTimestampMs(),
+        ]);
+
+        // Organizer happens to review the dashboard bottom-up and approves the
+        // later submission first.
+        $reviewedFirstEvent = $this->scoring()->approve($sentSecond, '+3161999999');
+        $reviewedSecondEvent = $this->scoring()->approve($sentFirst, '+3161999999');
+
+        $this->assertSame(10, $reviewedFirstEvent->points);
+        $this->assertSame(15, $reviewedSecondEvent->points);
     }
 
     public function test_approving_an_already_approved_submission_is_idempotent(): void

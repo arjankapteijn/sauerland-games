@@ -42,8 +42,8 @@ class ScoringService
 
         $event = Cache::lock("challenge:{$challenge->id}:approve", 10)->block(5, function () use ($submission, $challenge, $organizerNumber) {
             return DB::transaction(function () use ($submission, $challenge, $organizerNumber) {
-                $isFirstApproval = ! $challenge->submissions()->where('status', SubmissionStatus::Approved)->exists();
-                $points = $challenge->points + $this->speedBonus($challenge, $isFirstApproval);
+                $isFirstApproval = $this->isFirstApproval($challenge, $submission);
+                $points = $challenge->points + $this->speedBonus($challenge, $submission, $isFirstApproval);
 
                 $event = ScoreEvent::query()->create([
                     'team_id' => $submission->team_id,
@@ -108,15 +108,30 @@ class ScoringService
         return "Stand: {$standings}.".($open !== '' ? " Nog open: {$open}." : ' Alle opdrachten zijn afgerond!');
     }
 
-    private function speedBonus(Challenge $challenge, bool $isFirstApproval): int
+    /**
+     * A submission counts as "first" when no other still-viable submission (i.e. not
+     * rejected) for this challenge was sent earlier — based on when the team's Signal
+     * message came in, not on the order organizers happen to review submissions in.
+     */
+    private function isFirstApproval(Challenge $challenge, Submission $submission): bool
+    {
+        return ! $challenge->submissions()
+            ->whereKeyNot($submission->id)
+            ->where('status', '!=', SubmissionStatus::Rejected)
+            ->where('message_timestamp', '<', $submission->message_timestamp)
+            ->exists();
+    }
+
+    private function speedBonus(Challenge $challenge, Submission $submission, bool $isFirstApproval): int
     {
         if (! $isFirstApproval || $challenge->released_at === null) {
             return 0;
         }
 
         $deadline = $challenge->released_at->copy()->addMinutes(self::SPEED_BONUS_WINDOW_MINUTES);
+        $submittedAt = Carbon::createFromTimestampMs($submission->message_timestamp);
 
-        return Carbon::now()->lte($deadline) ? self::SPEED_BONUS_POINTS : 0;
+        return $submittedAt->lte($deadline) ? self::SPEED_BONUS_POINTS : 0;
     }
 
     private function announce(string $message): void
