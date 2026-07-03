@@ -18,6 +18,8 @@ use Livewire\Component;
 #[Title('Sauerland Games — Dashboard')]
 class Dashboard extends Component
 {
+    public ?string $releaseWarning = null;
+
     public function approve(int $submissionId, ScoringService $scoring): void
     {
         $scoring->approve(Submission::findOrFail($submissionId), 'dashboard');
@@ -30,7 +32,11 @@ class Dashboard extends Component
 
     public function release(int $challengeId, ReleaseChallenge $action): void
     {
-        $action->handle(Challenge::findOrFail($challengeId));
+        $failedTeams = $action->handle(Challenge::findOrFail($challengeId));
+
+        $this->releaseWarning = $failedTeams === []
+            ? null
+            : 'Opdracht is vrijgegeven, maar Signal-bericht is niet aangekomen bij: '.implode(', ', $failedTeams).'.';
     }
 
     public function render(): View

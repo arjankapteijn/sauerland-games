@@ -72,4 +72,19 @@ class DashboardTest extends TestCase
 
         $this->assertSame(ChallengeStatus::Released, $challenge->fresh()->status);
     }
+
+    public function test_releasing_a_challenge_still_succeeds_when_a_signal_message_fails(): void
+    {
+        $this->withSession(['dashboard_authenticated' => true]);
+        Http::fake(['*' => Http::response('server error', 500)]);
+
+        Team::factory()->create(['name' => 'Rood', 'signal_group_id' => 'group-1']);
+        $challenge = Challenge::factory()->create(['status' => ChallengeStatus::Draft]);
+
+        Livewire::test('dashboard')
+            ->call('release', $challenge->id)
+            ->assertSee('Rood');
+
+        $this->assertSame(ChallengeStatus::Released, $challenge->fresh()->status);
+    }
 }

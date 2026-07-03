@@ -16,6 +16,12 @@
         @endforeach
     </section>
 
+    @if ($releaseWarning)
+        <div class="mx-auto max-w-6xl mb-6 rounded-lg border border-amber-800 bg-amber-950 text-amber-300 px-4 py-3 text-sm">
+            {{ $releaseWarning }}
+        </div>
+    @endif
+
     <section class="mx-auto max-w-6xl mb-10">
         <h2 class="text-lg font-bold mb-4">Wachtend op goedkeuring ({{ $pending->count() }})</h2>
 
