@@ -127,7 +127,7 @@ betrokken rijen handmatig terug naar `draft` met het nieuwe `release_at`).
 | [`ScoringService`](app/Services/Game/ScoringService.php) | Punten toekennen/intrekken, snelheidsbonus, tussenstand-bericht |
 | `signal:listen` | Langlopend Artisan-commando dat long-polt tegen `/v1/receive` |
 | `game:release-due` / `game:expire-overdue` | Elke minuut via de scheduler: opdrachten op tijd vrijgeven/laten verlopen |
-| `game:send-thank-you` | Elke minuut via de scheduler: stuurt eenmalig een bedankbericht na afloop van het weekend |
+| `game:send-thank-you` | Kort cron-venster rond einde weekend: stuurt eenmalig een bedankbericht |
 | Livewire-dashboard (`/dashboard`) | Live scorebord + handmatige goedkeur-fallback, PIN-gated |
 
 **De kern van de goedkeuring**: een Signal-reactie verwijst zelf al naar het
