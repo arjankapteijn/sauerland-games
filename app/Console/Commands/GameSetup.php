@@ -24,7 +24,7 @@ class GameSetup extends Command
         $organizers = config('services.signal.organizers');
 
         if ($organizers === []) {
-            $this->error('Stel eerst SIGNAL_ORGANIZERS in .env in (telefoonnummers van Daniel en jou, comma-separated).');
+            $this->error('Stel eerst SIGNAL_ORGANIZERS in .env in (telefoonnummer(s) van de jury, comma-separated).');
 
             return self::FAILURE;
         }

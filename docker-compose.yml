@@ -22,7 +22,7 @@ services:
     env_file: .env
     volumes:
       - sauerland-games-storage:/var/www/html/storage
-      - sauerland-games-database:/var/www/html/database
+      - sauerland-games-database:/var/www/html/database/data
     # Hardening (zelfde lijn als arjankapteijn.nl/lovebox, met één verschil:
     # geen `read_only` — Laravel heeft storage/, bootstrap/cache/ en de
     # sqlite-db nodig als schrijfbare paden, die staan in de volumes hierboven).

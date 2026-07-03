@@ -237,7 +237,7 @@ services:
     env_file: /mnt/<pool>/apps/sauerland-games/.env   # absoluut pad!
     volumes:
       - sauerland-games-storage:/var/www/html/storage
-      - sauerland-games-database:/var/www/html/database
+      - sauerland-games-database:/var/www/html/database/data
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true

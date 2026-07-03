@@ -29,9 +29,15 @@ COPY --chown=app:app . .
 COPY --from=vendor --chown=app:app /app/vendor ./vendor
 COPY --from=assets --chown=app:app /app/public/build ./public/build
 
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache database \
-    && touch database/database.sqlite \
-    && chown -R app:app storage bootstrap/cache database
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache database/data \
+    && touch database/data/database.sqlite \
+    && chown -R app:app storage bootstrap/cache database/data
+
+# Alleen database/data (de sqlite-file) hoort in een volume, NIET de hele
+# database/-map: die bevat ook migrations/, en een named volume op het hele
+# pad zou nieuwe migratiebestanden uit latere images permanent maskeren
+# achter de inhoud van de eerste container-start.
+ENV DB_DATABASE=/var/www/html/database/data/database.sqlite
 
 RUN mkdir -p /etc/supervisor.d
 RUN cat <<'EOF' > /etc/supervisor.d/sauerland-games.ini
@@ -76,7 +82,7 @@ EOF
 RUN chmod +x /entrypoint.sh
 
 VOLUME /var/www/html/storage
-VOLUME /var/www/html/database
+VOLUME /var/www/html/database/data
 
 USER app
 ENV APP_ENV=production
