@@ -80,11 +80,25 @@ class SignalGateway
             ->throw();
     }
 
-    public function updateGroupAvatar(string $groupId, string $base64Avatar): void
+    /**
+     * The signal-cli-rest-api swagger spec marks every UpdateGroupRequest field as
+     * required, so name/description/permissions are always sent alongside the
+     * avatar rather than relying on the API accepting a partial body.
+     */
+    public function updateGroupAvatar(string $groupId, string $base64Avatar, string $name, string $description = ''): void
     {
         $this->client()
             ->put("/v1/groups/{$this->botNumber}/{$groupId}", [
                 'base64_avatar' => $base64Avatar,
+                'name' => $name,
+                'description' => $description,
+                'expiration_time' => 0,
+                'group_link' => 'disabled',
+                'permissions' => [
+                    'add_members' => 'only-admins',
+                    'edit_group' => 'only-admins',
+                    'send_messages' => 'every-member',
+                ],
             ])
             ->throw();
     }

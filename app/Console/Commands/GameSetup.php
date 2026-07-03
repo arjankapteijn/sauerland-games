@@ -30,6 +30,7 @@ class GameSetup extends Command
         }
 
         $game = Game::current();
+        $mainDescription = 'Aankondigingen en tussenstanden.';
 
         if ($game->signal_group_id === null) {
             // Bestaat de groep al op Signal (bijv. een vorige poging kwam wel
@@ -37,18 +38,19 @@ class GameSetup extends Command
             // een dubbele hoofdgroep aan te maken.
             $existing = $this->findGroupByName($signal, 'Sauerland Games');
 
-            $mainGroupId = $existing ?? $signal->createGroup('Sauerland Games', $organizers, 'Aankondigingen en tussenstanden.');
+            $mainGroupId = $existing ?? $signal->createGroup('Sauerland Games', $organizers, $mainDescription);
             $game->update(['signal_group_id' => $mainGroupId]);
             $this->info(($existing !== null ? 'Hoofdgroep gevonden (al aangemaakt): ' : 'Hoofdgroep aangemaakt: ').$mainGroupId);
         } else {
             $this->info('Hoofdgroep bestaat al.');
         }
 
-        $this->applyGroupAvatar($signal, $game->signal_group_id, 'icon.png');
+        $this->applyGroupAvatar($signal, $game->signal_group_id, 'icon.png', 'Sauerland Games', $mainDescription);
 
         foreach (Team::all() as $team) {
+            $groupName = "Sauerland Games — Team {$team->name}";
+
             if ($team->signal_group_id === null) {
-                $groupName = "Sauerland Games — Team {$team->name}";
                 $existing = $this->findGroupByName($signal, $groupName);
                 $groupId = $existing ?? $signal->createGroup($groupName, $organizers);
                 $team->update(['signal_group_id' => $groupId]);
@@ -57,7 +59,7 @@ class GameSetup extends Command
                 $this->info("Team {$team->name} heeft al een groep.");
             }
 
-            $this->applyGroupAvatar($signal, $team->signal_group_id, 'team-'.Str::slug($team->name).'.png');
+            $this->applyGroupAvatar($signal, $team->signal_group_id, 'team-'.Str::slug($team->name).'.png', $groupName);
         }
 
         return self::SUCCESS;
@@ -77,7 +79,7 @@ class GameSetup extends Command
     /**
      * Set the group photo from a pre-rendered PNG under docs/, if one exists for it.
      */
-    private function applyGroupAvatar(SignalGateway $signal, ?string $groupId, string $filename): void
+    private function applyGroupAvatar(SignalGateway $signal, ?string $groupId, string $filename, string $groupName, string $description = ''): void
     {
         $path = base_path("docs/{$filename}");
 
@@ -86,7 +88,7 @@ class GameSetup extends Command
         }
 
         try {
-            $signal->updateGroupAvatar($groupId, base64_encode((string) file_get_contents($path)));
+            $signal->updateGroupAvatar($groupId, base64_encode((string) file_get_contents($path)), $groupName, $description);
         } catch (ConnectionException|RequestException $e) {
             $this->warn("Kon groepsfoto niet zetten voor groep {$groupId}: {$e->getMessage()}");
         }
