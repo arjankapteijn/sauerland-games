@@ -80,6 +80,15 @@ class SignalGateway
             ->throw();
     }
 
+    public function updateGroupAvatar(string $groupId, string $base64Avatar): void
+    {
+        $this->client()
+            ->put("/v1/groups/{$this->botNumber}/{$groupId}", [
+                'base64_avatar' => $base64Avatar,
+            ])
+            ->throw();
+    }
+
     /**
      * Long-poll for new messages. Blocks on the server for up to $timeout seconds.
      * Safe to call in a tight loop from signal:listen.

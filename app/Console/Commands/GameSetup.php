@@ -8,6 +8,9 @@ use App\Services\Signal\SignalGateway;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Str;
 
 #[Signature('game:setup')]
 #[Description('Create the Signal groups for the main game and both teams')]
@@ -41,18 +44,20 @@ class GameSetup extends Command
             $this->info('Hoofdgroep bestaat al.');
         }
 
-        foreach (Team::all() as $team) {
-            if ($team->signal_group_id !== null) {
-                $this->info("Team {$team->name} heeft al een groep.");
+        $this->applyGroupAvatar($signal, $game->signal_group_id, 'icon.png');
 
-                continue;
+        foreach (Team::all() as $team) {
+            if ($team->signal_group_id === null) {
+                $groupName = "Sauerland Games — Team {$team->name}";
+                $existing = $this->findGroupByName($signal, $groupName);
+                $groupId = $existing ?? $signal->createGroup($groupName, $organizers);
+                $team->update(['signal_group_id' => $groupId]);
+                $this->info(($existing !== null ? "Team {$team->name} groep gevonden (al aangemaakt): " : "Team {$team->name} groep aangemaakt: ").$groupId);
+            } else {
+                $this->info("Team {$team->name} heeft al een groep.");
             }
 
-            $groupName = "Sauerland Games — Team {$team->name}";
-            $existing = $this->findGroupByName($signal, $groupName);
-            $groupId = $existing ?? $signal->createGroup($groupName, $organizers);
-            $team->update(['signal_group_id' => $groupId]);
-            $this->info(($existing !== null ? "Team {$team->name} groep gevonden (al aangemaakt): " : "Team {$team->name} groep aangemaakt: ").$groupId);
+            $this->applyGroupAvatar($signal, $team->signal_group_id, 'team-'.Str::slug($team->name).'.png');
         }
 
         return self::SUCCESS;
@@ -67,5 +72,23 @@ class GameSetup extends Command
         }
 
         return null;
+    }
+
+    /**
+     * Set the group photo from a pre-rendered PNG under docs/, if one exists for it.
+     */
+    private function applyGroupAvatar(SignalGateway $signal, ?string $groupId, string $filename): void
+    {
+        $path = base_path("docs/{$filename}");
+
+        if ($groupId === null || ! is_file($path)) {
+            return;
+        }
+
+        try {
+            $signal->updateGroupAvatar($groupId, base64_encode((string) file_get_contents($path)));
+        } catch (ConnectionException|RequestException $e) {
+            $this->warn("Kon groepsfoto niet zetten voor groep {$groupId}: {$e->getMessage()}");
+        }
     }
 }

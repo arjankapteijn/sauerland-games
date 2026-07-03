@@ -63,10 +63,13 @@ class GameCommandsTest extends TestCase
             '*/v1/groups/*' => Http::sequence()
                 ->push([], 200) // GET: hoofdgroep nog niet gevonden
                 ->push(['id' => 'main-group-id'], 201) // POST: hoofdgroep aanmaken
+                ->push([], 204) // PUT: hoofdgroep-foto zetten
                 ->push([], 200) // GET: team Rood-groep nog niet gevonden
                 ->push(['id' => 'rood-group-id'], 201) // POST: team Rood-groep aanmaken
+                ->push([], 204) // PUT: team Rood-foto zetten
                 ->push([], 200) // GET: team Blauw-groep nog niet gevonden
-                ->push(['id' => 'blauw-group-id'], 201), // POST: team Blauw-groep aanmaken
+                ->push(['id' => 'blauw-group-id'], 201) // POST: team Blauw-groep aanmaken
+                ->push([], 204), // PUT: team Blauw-foto zetten
         ]);
 
         Team::factory()->create(['name' => 'Rood']);
@@ -75,6 +78,13 @@ class GameCommandsTest extends TestCase
         $this->artisan('game:setup')->assertSuccessful();
 
         $this->assertSame(2, Team::query()->whereNotNull('signal_group_id')->count());
+        Http::assertSent(fn ($request) => $request->method() === 'PUT'
+            && str_contains((string) $request->url(), 'main-group-id')
+            && ($request->data()['base64_avatar'] ?? null) !== null);
+        Http::assertSent(fn ($request) => $request->method() === 'PUT'
+            && str_contains((string) $request->url(), 'rood-group-id'));
+        Http::assertSent(fn ($request) => $request->method() === 'PUT'
+            && str_contains((string) $request->url(), 'blauw-group-id'));
     }
 
     public function test_game_setup_reuses_an_existing_signal_group_instead_of_duplicating(): void

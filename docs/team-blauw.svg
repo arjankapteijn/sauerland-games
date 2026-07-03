@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="circle">
+      <circle cx="256" cy="256" r="248"/>
+    </clipPath>
+    <linearGradient id="blauw" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3D6685"/>
+      <stop offset="1" stop-color="#28455C"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="256" cy="256" r="256" fill="#151B14"/>
+
+  <g clip-path="url(#circle)">
+    <rect x="0" y="0" width="512" height="512" fill="url(#blauw)"/>
+  </g>
+
+  <circle cx="256" cy="256" r="248" fill="none" stroke="#F2F0E4" stroke-width="8" opacity="0.9"/>
+
+  <g transform="translate(256 246)" fill="#F2F0E4">
+    <path d="M -70 -90 h140 v34 c0 44 -31 78 -70 84 c-39 -6 -70 -40 -70 -84 z"/>
+    <path d="M -70 -78 h-30 v18 c0 30 20 52 44 58 a86 86 0 0 1 -14 -46 z"/>
+    <path d="M 70 -78 h30 v18 c0 30 -20 52 -44 58 a86 86 0 0 0 14 -46 z"/>
+    <rect x="-14" y="28" width="28" height="34"/>
+    <rect x="-56" y="62" width="112" height="20" rx="6"/>
+  </g>
+
+  <text x="256" y="452" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" letter-spacing="2" fill="#F2F0E4">TEAM BLAUW</text>
+</svg>

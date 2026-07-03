@@ -260,6 +260,12 @@ docker compose exec sauerland-games php artisan game:setup
 De hoofdgroep-id wordt automatisch opgeslagen (in de `games`-tabel); een
 herstart of `.env`-aanpassing is daarvoor niet nodig.
 
+`game:setup` zet ook meteen een groepsfoto: de hoofdgroep krijgt
+[`docs/icon.png`](docs/icon.png), team Rood [`docs/team-rood.png`](docs/team-rood.png)
+en team Blauw [`docs/team-blauw.png`](docs/team-blauw.png) (gerenderd uit de
+gelijknamige `.svg`-bronbestanden in `docs/`). Draai `game:setup` opnieuw om
+de foto's alsnog te zetten op groepen die al bestonden.
+
 ### Custom-icoon in de Apps-UI
 
 Het icoon ([`docs/icon.svg`](docs/icon.svg)) hoort in het **per-app**-bestand
