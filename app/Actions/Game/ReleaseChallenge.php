@@ -7,6 +7,8 @@ use App\Models\Challenge;
 use App\Services\Signal\SignalGateway;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ReleaseChallenge
@@ -22,9 +24,28 @@ class ReleaseChallenge
      */
     public function handle(Challenge $challenge): array
     {
-        if ($challenge->status === ChallengeStatus::Released) {
+        $alreadyReleased = Cache::lock("challenge:{$challenge->id}:release", 10)->block(5, function () use ($challenge) {
+            return DB::transaction(function () use ($challenge) {
+                $locked = Challenge::query()->whereKey($challenge->id)->lockForUpdate()->firstOrFail();
+
+                if ($locked->status === ChallengeStatus::Released) {
+                    return true;
+                }
+
+                $locked->update([
+                    'status' => ChallengeStatus::Released,
+                    'released_at' => now(),
+                ]);
+
+                return false;
+            });
+        });
+
+        if ($alreadyReleased) {
             return [];
         }
+
+        $challenge->refresh();
 
         $message = "📋 Nieuwe opdracht #{$challenge->number}: {$challenge->title}\n\n{$challenge->description}\n\n({$challenge->points} punten)";
 
@@ -47,11 +68,6 @@ class ReleaseChallenge
                 $failedTeams[] = $team->name;
             }
         }
-
-        $challenge->update([
-            'status' => ChallengeStatus::Released,
-            'released_at' => now(),
-        ]);
 
         return $failedTeams;
     }
