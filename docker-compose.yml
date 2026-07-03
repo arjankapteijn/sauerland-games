@@ -1,0 +1,33 @@
+# Voor TrueNAS SCALE (Apps → Discover Apps → ⋮ → Install via YAML) of elke
+# andere Docker-host. Kant-en-klaar image van ghcr.io (gebouwd door GitHub
+# Actions) — hier wordt niets lokaal gebouwd. Pull/update i.p.v. bouwen:
+# `docker compose pull && docker compose up -d`, of klik "Update" in de
+# TrueNAS-app. Eenmalig inloggen bij ghcr.io nodig, zie README.
+services:
+  sauerland-games:
+    image: ghcr.io/arjankapteijn/sauerland-games:latest
+    container_name: sauerland-games
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      # host-poort 8091 -> container-poort 8080 (8090 is al in gebruik door
+      # arjankapteijn.nl); pas de linkerkant gerust aan.
+      - '8091:8080'
+    env_file: .env
+    volumes:
+      - sauerland-games-storage:/var/www/html/storage
+      - sauerland-games-database:/var/www/html/database
+    # Hardening (zelfde lijn als arjankapteijn.nl/lovebox, met één verschil:
+    # geen `read_only` — Laravel heeft storage/, bootstrap/cache/ en de
+    # sqlite-db nodig als schrijfbare paden, die staan in de volumes hierboven).
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m
+    mem_limit: 512m
+    pids_limit: 256
+
+volumes:
+  sauerland-games-storage:
+  sauerland-games-database:

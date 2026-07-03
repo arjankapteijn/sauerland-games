@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'signal' => [
+        'api_url' => env('SIGNAL_API_URL'),
+        'bot_number' => env('SIGNAL_BOT_NUMBER'),
+        'main_group_id' => env('SIGNAL_MAIN_GROUP_ID'),
+        'organizers' => array_filter(explode(',', (string) env('SIGNAL_ORGANIZERS', ''))),
+        'dashboard_pin' => env('SIGNAL_DASHBOARD_PIN'),
+    ],
+
 ];

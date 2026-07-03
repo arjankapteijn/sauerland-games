@@ -1,0 +1,37 @@
+name: CI
+
+# Lint + test op elke push naar main en op elke PR (incl. Dependabot), zodat
+# dependency-PR's meteen groen/rood tonen. Draait op ubuntu en bewaart geen
+# artifacts → blijft binnen het gratis Actions-tegoed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# nieuwe push op dezelfde branch annuleert een nog lopende run
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@0f7f1d08e3e32076e51cae65eb0b0c871405b16e # v2.34.1
+        with:
+          php-version: '8.4' # gelijk aan de runtime in de Dockerfile
+          coverage: none
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci
+      - run: npm run build
+      - run: vendor/bin/pint --test
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test --compact

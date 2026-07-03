@@ -1,0 +1,17 @@
+node_modules
+vendor
+bootstrap/cache/*.php
+.env
+.env.*
+!.env.example
+.git
+.claude
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+database/database.sqlite
+tests
+*.log
+README.md
+MEMORY.md
