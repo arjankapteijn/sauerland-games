@@ -121,12 +121,6 @@ class ScoringService
 
     private function announce(string $message): void
     {
-        $mainGroupId = Game::current()->signal_group_id;
-
-        if ($mainGroupId === null) {
-            return;
-        }
-
-        $this->signal->sendMessage([$mainGroupId], $message);
+        Game::current()->announceToMainGroup($this->signal, $message);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Signal\SignalGateway;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,6 +15,22 @@ class Game extends Model
     public static function current(): self
     {
         return static::query()->firstOrCreate([]);
+    }
+
+    /**
+     * Send a message to the main Signal group, if one is configured.
+     *
+     * @return bool Whether a main group was configured and the message was sent.
+     */
+    public function announceToMainGroup(SignalGateway $signal, string $message): bool
+    {
+        if ($this->signal_group_id === null) {
+            return false;
+        }
+
+        $signal->sendMessage([$this->signal_group_id], $message);
+
+        return true;
     }
 
     /**

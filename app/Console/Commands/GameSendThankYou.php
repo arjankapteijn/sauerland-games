@@ -34,16 +34,15 @@ class GameSendThankYou extends Command
 
         $game->update(['thanked_at' => now()]);
 
-        if ($game->signal_group_id !== null) {
-            try {
-                $signal->sendMessage([$game->signal_group_id], '🏁 Het weekend zit erop — bedankt voor het meedoen allemaal, tot de volgende keer!');
+        try {
+            if ($game->announceToMainGroup($signal, '🏁 Het weekend zit erop — bedankt voor het meedoen allemaal, tot de volgende keer!')) {
                 $this->info('Bedankbericht verstuurd.');
-            } catch (ConnectionException|RequestException $e) {
-                Log::warning('Kon bedankbericht niet versturen.', [
-                    'game_id' => $game->id,
-                    'exception' => $e->getMessage(),
-                ]);
             }
+        } catch (ConnectionException|RequestException $e) {
+            Log::warning('Kon bedankbericht niet versturen.', [
+                'game_id' => $game->id,
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         return self::SUCCESS;

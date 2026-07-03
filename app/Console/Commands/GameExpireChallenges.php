@@ -32,13 +32,11 @@ class GameExpireChallenges extends Command
 
                 $challenge->update(['status' => ChallengeStatus::Expired]);
 
-                $mainGroupId = Game::current()->signal_group_id;
-
-                if ($missed->isNotEmpty() && $mainGroupId !== null) {
+                if ($missed->isNotEmpty()) {
                     $names = $missed->pluck('name')->implode(', ');
 
                     try {
-                        $signal->sendMessage([$mainGroupId], "⏰ De tijd is om voor #{$challenge->number} '{$challenge->title}'. Team(s) {$names} hebben 'm niet op tijd afgerond.");
+                        Game::current()->announceToMainGroup($signal, "⏰ De tijd is om voor #{$challenge->number} '{$challenge->title}'. Team(s) {$names} hebben 'm niet op tijd afgerond.");
                     } catch (ConnectionException|RequestException $e) {
                         Log::warning('Kon Signal-bericht voor verlopen opdracht niet versturen.', [
                             'challenge_id' => $challenge->id,
