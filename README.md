@@ -227,16 +227,21 @@ en herstart de app.
 
 ### Custom-icoon in de Apps-UI
 
-Zet het icoon in het **per-app**-bestand
-`/mnt/.ix-apps/app_configs/sauerland-games/metadata.yaml`, als sleutel onder
-`metadata:`. **Niet** in het globale `/mnt/.ix-apps/metadata.yaml` — dat wordt
-bij elke deploy/update opnieuw opgebouwd en wist een handmatige icon-regel.
+Het icoon ([`docs/icon.svg`](docs/icon.svg)) hoort in het **per-app**-bestand
+`/mnt/.ix-apps/app_configs/sauerland-games/metadata.yaml`. **Niet** in het
+globale `/mnt/.ix-apps/metadata.yaml` — dat wordt bij elke deploy/update
+opnieuw opgebouwd en wist een handmatige icon-regel (zie de lovebox-fix).
+
+Gebruik [`docs/set-truenas-icon.sh`](docs/set-truenas-icon.sh) — als root op
+de TrueNAS-host zelf:
 
 ```bash
-# vervang de icon-URL door een eigen afbeelding (bijv. eerst naar docs/icon.png in deze repo)
-sed -i '/^"metadata":/a\  "icon": "https://example.com/pad-naar-icoon.png"' \
-  /mnt/.ix-apps/app_configs/sauerland-games/metadata.yaml
+./set-truenas-icon.sh sauerland-games
 ```
+
+Het script maakt eerst een backup, zoekt zelf de juiste plek (of die nu wel
+of niet al een `icon`-regel heeft), en valideert de YAML vóór het toepast.
+Herbruikbaar voor andere custom apps: `./set-truenas-icon.sh <app> <icon-url>`.
 
 Daarna in de TrueNAS-UI: Apps → **sauerland-games** → **Edit** → **Save**
 (zonder wijzigingen) om de metadata opnieuw te laten inlezen.
