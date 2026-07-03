@@ -11,6 +11,8 @@ use App\Models\Submission;
 use App\Models\Team;
 use App\Services\Signal\SignalGateway;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ScoringService
 {
@@ -31,24 +33,31 @@ class ScoringService
         }
 
         $challenge = $submission->challenge;
-        $isFirstApproval = ! $challenge->submissions()->where('status', SubmissionStatus::Approved)->exists();
-        $points = $challenge->points + $this->speedBonus($challenge, $isFirstApproval);
 
-        $event = ScoreEvent::query()->create([
-            'team_id' => $submission->team_id,
-            'challenge_id' => $challenge->id,
-            'submission_id' => $submission->id,
-            'points' => $points,
-            'reason' => "Opdracht #{$challenge->number} '{$challenge->title}' goedgekeurd",
-        ]);
+        $event = Cache::lock("challenge:{$challenge->id}:approve", 10)->block(5, function () use ($submission, $challenge, $organizerNumber) {
+            return DB::transaction(function () use ($submission, $challenge, $organizerNumber) {
+                $isFirstApproval = ! $challenge->submissions()->where('status', SubmissionStatus::Approved)->exists();
+                $points = $challenge->points + $this->speedBonus($challenge, $isFirstApproval);
 
-        $submission->update([
-            'status' => SubmissionStatus::Approved,
-            'approved_by' => $organizerNumber,
-            'approved_at' => now(),
-        ]);
+                $event = ScoreEvent::query()->create([
+                    'team_id' => $submission->team_id,
+                    'challenge_id' => $challenge->id,
+                    'submission_id' => $submission->id,
+                    'points' => $points,
+                    'reason' => "Opdracht #{$challenge->number} '{$challenge->title}' goedgekeurd",
+                ]);
 
-        $this->announce("🎉 Team {$submission->team->name} heeft #{$challenge->number} '{$challenge->title}' voltooid! +{$points} punten.\n\n".$this->standingsMessage());
+                $submission->update([
+                    'status' => SubmissionStatus::Approved,
+                    'approved_by' => $organizerNumber,
+                    'approved_at' => now(),
+                ]);
+
+                return $event;
+            });
+        });
+
+        $this->announce("🎉 Team {$submission->team->name} heeft #{$challenge->number} '{$challenge->title}' voltooid! +{$event->points} punten.\n\n".$this->standingsMessage());
 
         return $event;
     }
