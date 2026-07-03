@@ -177,6 +177,17 @@ Personal Access Token (classic) met alleen scope `read:packages`.
 
 ### Uitrollen als custom app
 
+> **Valkuil (uit ervaring):** gebruik een **absoluut** `env_file`-pad, niet
+> `.env`. TrueNAS draait "Install via YAML" vanuit een andere working
+> directory (`/tmp`), dus een relatief pad geeft
+> `env file /tmp/.env not found`. Maak eerst de map + `.env` aan:
+>
+> ```bash
+> mkdir -p /mnt/<pool>/apps/sauerland-games
+> cp .env.example /mnt/<pool>/apps/sauerland-games/.env
+> nano /mnt/<pool>/apps/sauerland-games/.env   # SIGNAL_*, APP_KEY, DASHBOARD_PIN invullen
+> ```
+
 **Apps → Discover Apps → ⋮ → Install via YAML**, naam `sauerland-games`:
 
 ```yaml

@@ -1,8 +1,14 @@
-# Voor TrueNAS SCALE (Apps → Discover Apps → ⋮ → Install via YAML) of elke
-# andere Docker-host. Kant-en-klaar image van ghcr.io (gebouwd door GitHub
-# Actions) — hier wordt niets lokaal gebouwd. Pull/update i.p.v. bouwen:
-# `docker compose pull && docker compose up -d`, of klik "Update" in de
-# TrueNAS-app. Eenmalig inloggen bij ghcr.io nodig, zie README.
+# Voor een Docker-host via SSH: kopieer dit bestand + `.env` (zie
+# .env.example) naar dezelfde map en draai `docker compose pull && docker
+# compose up -d`. Kant-en-klaar image van ghcr.io (gebouwd door GitHub
+# Actions) — hier wordt niets lokaal gebouwd. Eenmalig inloggen bij ghcr.io
+# nodig, zie README.
+#
+# LET OP — gebruik dit bestand NIET 1-op-1 in TrueNAS' "Install via YAML":
+# die draait de compose vanuit een andere working directory (`/tmp`), dus
+# het relatieve `env_file: .env` hieronder wordt niet gevonden ("env file
+# /tmp/.env not found"). Gebruik daarvoor de losse YAML met een ABSOLUUT
+# env_file-pad uit de README ("Uitrollen als custom app").
 services:
   sauerland-games:
     image: ghcr.io/arjankapteijn/sauerland-games:latest
