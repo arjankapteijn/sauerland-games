@@ -30,6 +30,10 @@ Deze repo is bewust **publiek-veilig**: alle persoonsgegevens (telefoon­nummers
 namen) komen uit `.env` of ontstaan pas in de database zodra iemand zich
 aanmeldt. Er staat niets gevoeligs in git.
 
+<p align="center">
+  <img src="docs/dashboard.jpg" alt="Live dashboard met scorebord en opdrachtenlijst" width="600">
+</p>
+
 ---
 
 ## Spelconcept
