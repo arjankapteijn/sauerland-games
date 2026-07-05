@@ -1,5 +1,13 @@
 # Sauerland Games
 
+<p align="center">
+  <img src="docs/icon.png" alt="Sauerland Games" height="120">
+</p>
+<p align="center">
+  <img src="docs/team-rood.png" alt="Team Rood" height="80">
+  <img src="docs/team-blauw.png" alt="Team Blauw" height="80">
+</p>
+
 Signal-gestuurd teamspel voor een mannenweekend: spelers melden zich aan via
 een Signal-appje, komen random in een van twee teams, krijgen opdrachten
 toegestuurd en sturen foto-bewijs terug naar hun teamgroep. Alleen de
